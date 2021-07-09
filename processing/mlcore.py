@@ -192,7 +192,7 @@ class mlcore(object):
             
             extended_features = pd.concat([self.features, features])
             extended_features.fillna(0, inplace=True)
-            clustering = self.cluster_hdbscan(features=extended_features, dry=True)
+            clustering = self.cluster_hdbscan(features=extended_features)
             clustering_result = clustering["clustering"].loc["current_" + sample.name]
 
             if amend:
