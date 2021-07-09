@@ -12,19 +12,6 @@ class RunML(object):
     def __init__(self):
         self.mlc = mlcore()
         self.new_sample = sample_unit()
-        #self.new_sample.init(results, isPath)
-        
-        #self.mlc.loadState()        
-        
-        #cl_args = [i for i in cfg.ml.clustering_parameters.split(",")]
-
-        ## Select clustering algorithm
-        #cl_args= [int(i) for i in cl_args]
-        #self.mlc.clustering["min_samples"] = cl_args[0]
-        #self.mlc.clustering["min_cluster_size"] = cl_args[1]
-        
-        #pprint(self.mlc.clustering["clustering"])
-        
         self.init()
     
     @classmethod
@@ -33,7 +20,6 @@ class RunML(object):
         
         loader = samples_loader()
         loader.load_binaries(os.path.join(CUCKOO_ROOT, cfg.ml.data_directory))
-        #loader.load_binaries(cfg.ml.data_directory)
 
         features_dict = loader.get_features()
         labels_dict = loader.get_labels()
@@ -49,20 +35,7 @@ class RunML(object):
         cfg = Config("ml")
         self.mlc.features = pd.read_csv("features.csv", encoding="utf-8")
         self.mlc.labels = pd.read_csv("labels.csv", encoding="utf-8")
-        ##cfg = Config("ml")
-
-        #loader = samples_loader()
-        #loader.load_binaries(os.path.join(CUCKOO_ROOT, cfg.ml.data_directory))
-        ##loader.load_binaries(cfg.ml.data_directory)
-
-        #features_dict = loader.get_features()
-        #labels_dict = loader.get_labels()
-
-        ##self.mlc = mlcore()
-        #self.mlc.load_features(features_dict)
-        #self.mlc.load_labels(labels_dict)
-
-        #features_nominal = self.mlc.feature_category(":count:", complement=True)
+        
         features_numerical = self.mlc.feature_category()
 
         selected_features = []
@@ -75,14 +48,11 @@ class RunML(object):
                 
         data = pd.concat(data, axis=1)
 
-        # Parse clustering parameters
         cl_args = [i for i in cfg.ml.clustering_parameters.split(",")]
 
-        # Select clustering algorithm
         cl_args= [int(i) for i in cl_args]
         self.mlc.cluster_hdbscan(data, *cl_args)
 
-        # Save clustering fit
         clf = {}
         clf["clustering+noise"] = self.mlc.assess_clustering(self.mlc.clustering["clustering"], self.mlc.labels, data, discard_noise=False)
         clf["clustering"] = self.mlc.assess_clustering(self.mlc.clustering["clustering"], self.mlc.labels, data, discard_noise=True)
@@ -92,10 +62,6 @@ class RunML(object):
         self.mlc.clustering["clustering"].to_csv("clustering_results.csv", encoding="utf-8")
             
         self.mlc.clustering_label_distribution(self.mlc.clustering["clustering"], self.mlc.labels).to_csv("cluster_label_distribution.csv", encoding="utf-8")
-
-        # Save abnormal behaviour stats?
-        #if cfg.ml.abnormal_behaviour:
-            #self.mlc.detect_abnormal_behaviour(features_numerical).to_csv("abnormal_behaviour.csv", encoding="utf-8")
 
         if cfg.ml.anomalies_detection:
             ad = pd.DataFrame(self.mlc.clustering["clustering"]["label"])
@@ -110,9 +76,7 @@ class RunML(object):
                         in_list += ad_dict[i][j]
                     ad[i] = pd.Series([1] * len(in_list), index = in_list)
             ad.to_csv("anomalies.csv", encoding="utf-8")
-
-        #self.mlc.saveState()
-        #pprint(self.mlc.clustering["clustering"])
+            
     
     def run(self, results = None, isPath = False):
         self.new_sample.init(results, isPath)
